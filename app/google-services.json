@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "441124040334",
+    "project_id": "cse470-project-99dc0",
+    "storage_bucket": "cse470-project-99dc0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:441124040334:android:30506c0d2692fe73aa63df",
+        "android_client_info": {
+          "package_name": "vn.edu.tlu.cse470_team8"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0YrbNhArT5pIg9KR54RP8Ym1ZKekUszY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
