@@ -1,6 +1,8 @@
 package vn.edu.tlu.cse470_team8.view;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,6 +13,7 @@ import androidx.core.view.WindowInsetsCompat;
 import vn.edu.tlu.cse470_team8.R;
 
 public class MainActivity extends AppCompatActivity {
+    Button button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,5 +25,13 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        button = findViewById(R.id.button);
+        button.setOnClickListener(v -> {
+            // Chuyen qua home activity
+            Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+            startActivity(intent);
+
+        });
     }
+
 }
