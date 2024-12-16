@@ -5,6 +5,70 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ChatActivity">
+    tools:context=".view.ChatActivity">
 
+    <FrameLayout
+        android:id="@+id/frame_top_chat_bar"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <include layout="@layout/top_nav_chat"></include>
+
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/frame_chat_message"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/frame_sugget_word"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/frame_top_chat_bar">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rcv_chat_message"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/frame_sugget_word"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        app:layout_constraintBottom_toTopOf="@+id/frame_chat_bar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rcv_sugget_message"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/frame_chat_bar"
+        android:layout_width="0dp"
+        android:layout_height="70dp"
+        app:layout_constraintBottom_toTopOf="@+id/frame_key_broad"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:ignore="MissingConstraints">
+
+        <include layout="@layout/bottom_chat_bar" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/frame_key_broad"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+    </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

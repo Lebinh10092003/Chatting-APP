@@ -1,5 +1,7 @@
 package vn.edu.tlu.cse470_team8.controller;
 
+import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,18 +14,20 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.Timestamp;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import vn.edu.tlu.cse470_team8.R;
 import vn.edu.tlu.cse470_team8.model.Group;
+import vn.edu.tlu.cse470_team8.view.ChatActivity;
 
 public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHolder> {
 
     private List<Group> groupList;
+    private Context context;
 
-    public GroupAdapter(List<Group> groupList) {
+    public GroupAdapter(Context context, List<Group> groupList) {
+        this.context = context;
         this.groupList = groupList;
     }
 
@@ -40,20 +44,29 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
 
         // Set tên nhóm
         holder.groupName.setText(group.getGroup_name());
+
         // Set thời gian gửi tin nhắn cuối cùng bằng cách lấy dữ liệu từ firestore và chuyển đổi
         Timestamp timestamp = group.getLast_message_time();
         String formattedTime = formatTimestampToTime(timestamp);
         holder.sentTime.setText(formattedTime);
 
-
-
         // Set tin nhắn cuối
         holder.lastMessage.setText(group.getLast_message());
+
         // Set số tin nhắn chưa đọc
         holder.unreadMessagesCount.setText(String.valueOf(group.getUnread_messages_count()));
+
         // Set avatar (nếu có URL)
         holder.avatarImageView.setImageResource(R.drawable.logo_remove);
 
+        // Thêm sự kiện click
+        holder.itemView.setOnClickListener(v -> {
+            // Chuyển đến ChatActivity và truyền groupId
+            Intent intent = new Intent(context, ChatActivity.class);
+            intent.putExtra("groupId", group.getGroup_id());  // Truyền groupId
+            intent.putExtra("groupName", group.getGroup_name());  // Truyền groupName
+            context.startActivity(intent);
+        });
     }
 
     @Override
@@ -77,15 +90,15 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
             unreadMessagesCount = itemView.findViewById(R.id.txt_new_message);
         }
     }
-    private String formatTimestampToTime(com.google.firebase.Timestamp timestamp) {
+
+    private String formatTimestampToTime(Timestamp timestamp) {
         if (timestamp == null) return ""; // Trường hợp không có timestamp
 
         // Chuyển Timestamp thành Date
         java.util.Date date = timestamp.toDate();
 
         // Định dạng thành giờ:phút (HH:mm)
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm");
-        sdf.setTimeZone(java.util.TimeZone.getDefault()); // Sử dụng múi giờ hiện tại
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
         return sdf.format(date);
     }
 }

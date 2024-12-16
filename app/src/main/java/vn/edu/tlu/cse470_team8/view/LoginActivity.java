@@ -120,10 +120,15 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void saveUserId(String userId) {
+        // Xoa tat ca id cu
+        sharedPreferences.edit().clear().apply();
+
         // Lưu userId vào SharedPreferences
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("userId", userId);
         editor.apply();
+
+
     }
 }
 

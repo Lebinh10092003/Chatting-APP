@@ -35,8 +35,10 @@ public class MessageFragment extends Fragment {
     private SharedPreferences sharedPreferences;
     private String userId;
 
+
     public MessageFragment() {
         // Required empty public constructor
+
     }
 
     @Override
@@ -132,7 +134,7 @@ public class MessageFragment extends Fragment {
 
                     // Cập nhật giao diện
                     if (groupAdapter == null) {
-                        groupAdapter = new GroupAdapter(privateGroups);
+                        groupAdapter = new GroupAdapter(requireContext(), privateGroups);
                         recyclerView.setAdapter(groupAdapter);
                     } else {
                         groupAdapter.notifyDataSetChanged();
