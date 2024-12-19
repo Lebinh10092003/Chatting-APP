@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -25,25 +27,68 @@ import vn.edu.tlu.cse470_team8.R;
 public class LoginActivity extends AppCompatActivity {
     private EditText usernameEditText, passwordEditText;
     private Button loginButton;
+    private Switch switchRemember;
+    private TextView txtForgotPassword, txtRegister;
     private FirebaseFirestore db;
     private SharedPreferences sharedPreferences;
+    private boolean remember_status;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
         // Khởi tạo Firestore và SharedPreferences
         db = FirebaseFirestore.getInstance();
         // Lấy SharedPreferences
         sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        // Khi người dùng đã đăng nhập, chuyển đến
+        remember_status = sharedPreferences.getBoolean("remember", false);
+        if (remember_status) {
+            usernameEditText.setText(sharedPreferences.getString("phone", ""));
+            passwordEditText.setText(sharedPreferences.getString("password", ""));
+
+        }
 
         // Lấy các view từ layout
-        usernameEditText = findViewById(R.id.edt_user_name);
-        passwordEditText = findViewById(R.id.edt_pass_word);
-        loginButton = findViewById(R.id.bt_login);
+        usernameEditText = findViewById(R.id.edt_phone_login);
+        passwordEditText = findViewById(R.id.edt_password_login);
+        loginButton = findViewById(R.id.btn_login);
+        switchRemember = findViewById(R.id.sw_remember_password);
+        txtForgotPassword = findViewById(R.id.txt_forgot_password);
+        txtRegister = findViewById(R.id.txt_register);
 
-        loginButton.setOnClickListener(v -> attemptLogin());
+
+
+
+        loginButton.setOnClickListener(
+                v -> {
+                    attemptLogin();
+                    if (switchRemember.isChecked()) {
+                        // Lưu thông tin đăng nhập
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("phone", usernameEditText.getText().toString());
+                        editor.putString("password", passwordEditText.getText().toString());
+                        editor.putBoolean("remember", true);
+                        editor.apply();
+
+                    } else {
+                        // Xóa thông tin đăng nhập
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.remove("phone");
+                        editor.remove("password");
+                        editor.remove("remember");
+                        editor.apply();
+                    }
+                }
+        );
+
+        txtForgotPassword.setOnClickListener(v -> {
+            Toast.makeText(this, "Chức năng quên mật khẩu đang được phát triển", Toast.LENGTH_SHORT).show();
+        });
+        txtRegister.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void attemptLogin() {
@@ -122,7 +167,6 @@ public class LoginActivity extends AppCompatActivity {
     private void saveUserId(String userId) {
         // Xoa tat ca id cu
         sharedPreferences.edit().clear().apply();
-
         // Lưu userId vào SharedPreferences
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("userId", userId);

@@ -17,7 +17,7 @@
 
         <ImageView
             android:layout_width="wrap_content"
-            android:layout_height="400dp"
+            android:layout_height="293dp"
             android:contentDescription="@string/app_name"
             android:scaleType="fitXY"
             android:src="@drawable/login_img" />
@@ -40,10 +40,10 @@
             android:layout_marginLeft="15dp"
             />
         <EditText
-            android:id="@+id/edt_phone_login"
+            android:id="@+id/edt_name_register"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Số điện thoại"
+            android:hint="Họ và tên"
             android:layout_marginTop="20dp"
             android:layout_marginLeft="15dp"
             android:layout_marginRight="15dp"
@@ -52,7 +52,19 @@
             android:textSize="18sp"
             />
         <EditText
-            android:id="@+id/edt_password_login"
+            android:id="@+id/edt_phone_register"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Số điện thoại"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:background="@drawable/edit_text_border"
+            android:padding="10dp"
+            android:textSize="18sp"
+            />
+        <EditText
+            android:id="@+id/edt_password_register"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Mật khẩu"
@@ -64,52 +76,29 @@
             android:textSize="18sp"
             android:inputType="textPassword"
             />
-
-
-        <LinearLayout
+        <EditText
+            android:id="@+id/edt_password_comfirm_register"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:hint="Nhập lại mật khẩu"
             android:layout_marginTop="10dp"
-            android:orientation="horizontal">
-
-            <Switch
-                android:id="@+id/sw_remember_password"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_weight="0"
-                android:rotationY="-360"
-                />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Nhớ mật khẩu"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/txt_forgot_password"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="120dp"
-                android:layout_marginRight="10dp"
-                android:text="Quên mật khẩu"
-                android:textColor="#2196F3"
-
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:background="@drawable/edit_text_border"
+            android:padding="10dp"
+            android:textSize="18sp"
+            android:inputType="textPassword"
+            />
 
         <Button
-            android:id="@+id/btn_login"
+            android:id="@+id/btn_register"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="15dp"
             android:layout_marginTop="5dp"
             android:layout_marginRight="15dp"
             android:backgroundTint="@color/appcolor"
-            android:text="Đăng nhập"
+            android:text="Đăng ký"
             android:textColor="@color/white"
             android:textSize="20sp"
             app:cornerRadius="5dp" />
@@ -123,15 +112,14 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="Chưa có tài khoản?"
+                android:text="Đã có tài khoản?"
                 android:textSize="16sp"
-
                 />
             <TextView
-                android:id="@+id/txt_register"
+                android:id="@+id/txt_login_now"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="Đăng ký ngay"
+                android:text="Đăng nhập ngay"
                 android:textColor="#2196F3"
                 android:textSize="16sp"
                 android:textStyle="bold"

@@ -2,7 +2,6 @@ package vn.edu.tlu.cse470_team8.view;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.Html;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
@@ -18,7 +17,6 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,6 +87,9 @@ public class ChatActivity extends AppCompatActivity {
                 Toast.makeText(ChatActivity.this, "Please enter a message", Toast.LENGTH_SHORT).show();
             }
         });
+
+        // Xử lý khi người dùng nhấp vào nút quay lại
+        bt_back.setOnClickListener(v -> finish());
 
 
     }

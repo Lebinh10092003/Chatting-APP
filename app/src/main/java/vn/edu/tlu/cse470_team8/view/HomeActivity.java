@@ -1,10 +1,14 @@
 package vn.edu.tlu.cse470_team8.view;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,7 +20,8 @@ import androidx.core.view.WindowInsetsCompat;
 import vn.edu.tlu.cse470_team8.R;
 
 public class HomeActivity extends AppCompatActivity {
-    ImageButton bt_nav_message_icon, bt_nav_group_icon, bt_nav_profile_icon, bt_nav_setting_icon;
+    ImageButton bt_nav_message_icon, bt_nav_group_icon, bt_nav_profile_icon, bt_nav_setting_icon,bt_Logo_topbar, bt_search_topbar, bt_add_topbar;
+    EditText edt_search_topbar;
     TextView tv_nav_message, tv_nav_group, tv_nav_profile, tv_nav_setting;
     LinearLayout ll_nav_message, ll_nav_group, ll_nav_profile, ll_nav_setting;
     String selected = "message";
@@ -31,6 +36,7 @@ public class HomeActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        // Ánh xạ các phần tử cua bottom bar
         bt_nav_message_icon = findViewById(R.id.bt_nav_message_icon);
         bt_nav_group_icon = findViewById(R.id.bt_nav_group_icon);
         bt_nav_profile_icon = findViewById(R.id.bt_nav_profile_icon);
@@ -43,6 +49,42 @@ public class HomeActivity extends AppCompatActivity {
         ll_nav_group = findViewById(R.id.frame_nav_group);
         ll_nav_profile = findViewById(R.id.frame_nav_profile);
         ll_nav_setting = findViewById(R.id.frame_nav_setting);
+
+        // Ánh xạ các phần tử của topbar
+        bt_Logo_topbar = findViewById(R.id.imgBt_iconLogo_topnav);
+        bt_search_topbar = findViewById(R.id.imgBt_search_topnav);
+        bt_add_topbar = findViewById(R.id.img_Bt_addfriend_topnav);
+        edt_search_topbar = findViewById(R.id.edt_search_topnav);
+
+        // Bắt sự kiện click vào icon add
+        bt_add_topbar.setOnClickListener(v -> {
+            // Tạo PopupMenu
+            PopupMenu popupMenu = new PopupMenu(HomeActivity.this, v);
+            popupMenu.getMenuInflater().inflate(R.menu.popup_menu_add, popupMenu.getMenu());
+
+            // Xử lý sự kiện khi chọn một mục trong menu
+            popupMenu.setOnMenuItemClickListener(item -> {
+                if (item.getItemId() == R.id.menu_add_friend) {
+                    // Xử lý khi chọn "Thêm bạn"
+                    // Chuyen den AddFriendActivity
+                    Intent intent = new Intent(HomeActivity.this, AddFirendActivity.class);
+                    startActivity(intent);
+
+                    return true;
+                }
+                if (item.getItemId() == R.id.menu_create_group) {
+                    // Xử lý khi chọn "Tạo nhóm"
+                    Toast.makeText(HomeActivity.this, "Tạo nhóm", Toast.LENGTH_SHORT).show();
+                    return true;
+                }
+                return false;
+            });
+
+            // Hiển thị PopupMenu
+            popupMenu.show();
+        });
+
+
 
 
         //Bắt sự kiện click vào icon message
@@ -74,6 +116,8 @@ public class HomeActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             StartMessageFragment();
         }
+
+
 
     }
     protected  void StartMessageFragment(){

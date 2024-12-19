@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        button = findViewById(R.id.button);
+        button = findViewById(R.id.btn_Start_main);
         button.setOnClickListener(v -> {
             // Chuyen qua home activity
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
