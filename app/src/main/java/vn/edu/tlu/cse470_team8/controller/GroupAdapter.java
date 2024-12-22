@@ -44,15 +44,12 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
 
         // Set tên nhóm
         holder.groupName.setText(group.getGroup_name());
-
         // Set thời gian gửi tin nhắn cuối cùng bằng cách lấy dữ liệu từ firestore và chuyển đổi
         Timestamp timestamp = group.getLast_message_time();
         String formattedTime = formatTimestampToTime(timestamp);
         holder.sentTime.setText(formattedTime);
-
         // Set tin nhắn cuối
         holder.lastMessage.setText(group.getLast_message());
-
         // Set số tin nhắn chưa đọc
         holder.unreadMessagesCount.setText(String.valueOf(group.getUnread_messages_count()));
 

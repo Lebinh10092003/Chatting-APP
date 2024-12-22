@@ -69,12 +69,13 @@ public class HomeActivity extends AppCompatActivity {
                     // Chuyen den AddFriendActivity
                     Intent intent = new Intent(HomeActivity.this, AddFirendActivity.class);
                     startActivity(intent);
-
                     return true;
                 }
                 if (item.getItemId() == R.id.menu_create_group) {
                     // Xử lý khi chọn "Tạo nhóm"
-                    Toast.makeText(HomeActivity.this, "Tạo nhóm", Toast.LENGTH_SHORT).show();
+                    // Chuyen den CreatePublicGroupActivity
+                    Intent intent = new Intent(HomeActivity.this, CreatePublicGroupActivity.class);
+                    startActivity(intent);
                     return true;
                 }
                 return false;

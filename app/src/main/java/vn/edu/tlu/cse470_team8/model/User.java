@@ -9,6 +9,8 @@ public class User {
     private String email;
     private String password_hash;
     private String avatar_url;
+
+    private Timestamp birth_day;
     private String status;
     private Timestamp last_login;
     private Boolean is_verified;
@@ -16,18 +18,21 @@ public class User {
 
     public User() {
     }
-    public User(String user_id, String username, String phone, String email, String password_hash, String avatar_url, String status, Timestamp last_login, Boolean is_verified, Timestamp created_at) {
+    public User(String user_id, String username, String phone, String email, String password_hash, String avatar_url,Timestamp birth_day, String status, Timestamp last_login, Boolean is_verified, Timestamp created_at) {
         this.user_id = user_id;
         this.username = username;
         this.phone = phone;
         this.email = email;
         this.password_hash = password_hash;
         this.avatar_url = avatar_url;
+        this.birth_day = birth_day;
         this.status = status;
         this.last_login = last_login;
         this.is_verified = is_verified;
         this.created_at = created_at;
     }
+
+
     public String getUser_id() {
         return user_id;
     }
@@ -63,6 +68,12 @@ public class User {
     }
     public void setAvatar_url(String avatar_url) {
         this.avatar_url = avatar_url;
+    }
+    public Timestamp getBirth_day() {
+        return birth_day;
+    }
+    public void setBirth_day(Timestamp birth_day) {
+        this.birth_day = birth_day;
     }
     public String getStatus() {
         return status;

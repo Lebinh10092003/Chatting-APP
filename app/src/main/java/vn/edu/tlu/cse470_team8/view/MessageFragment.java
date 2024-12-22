@@ -120,7 +120,7 @@ public class MessageFragment extends Fragment {
                         if (lastMessageDoc == null ||
                                 document.getTimestamp("timestamp").compareTo(lastMessageDoc.getTimestamp("timestamp")) > 0) {
                             lastMessageDoc = document;
-                            Log.d("Firestore", "Last message: " + lastMessageDoc.getString("content"));
+                            Log.d("Fires tore", "Last message: " + lastMessageDoc.getString("content"));
                         }
                     }
 
