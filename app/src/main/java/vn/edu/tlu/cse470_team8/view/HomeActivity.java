@@ -1,8 +1,10 @@
 package vn.edu.tlu.cse470_team8.view;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -36,6 +38,10 @@ public class HomeActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        boolean remember_status = sharedPreferences.getBoolean("remember", false);
+        Log.d("MainActivity", "Remember status: " + remember_status);
         // Ánh xạ các phần tử cua bottom bar
         bt_nav_message_icon = findViewById(R.id.bt_nav_message_icon);
         bt_nav_group_icon = findViewById(R.id.bt_nav_group_icon);

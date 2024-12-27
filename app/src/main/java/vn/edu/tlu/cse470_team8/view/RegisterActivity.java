@@ -90,11 +90,12 @@ public class RegisterActivity extends AppCompatActivity {
         String avatar_url = "";
         Timestamp created_at = Timestamp.now();
         String email = "";
+        String gender = "";
         Boolean is_verified = false;
         Timestamp birth_day = Timestamp.now();
         Timestamp last_login = Timestamp.now();
         String status = "offline";
-        User user = new User(userId, name, phone, email, password, avatar_url,birth_day, status, last_login, is_verified, created_at);
+        User user = new User(userId, name, phone, email,gender, password, avatar_url,birth_day, status, last_login, is_verified, created_at);
         db = FirebaseFirestore.getInstance();
         // Luu user vao database
         db.collection("users")

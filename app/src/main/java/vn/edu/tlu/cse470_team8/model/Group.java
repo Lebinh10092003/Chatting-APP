@@ -79,6 +79,7 @@ public class Group {
         return is_private;
     }
 
+    // Setter
     public void setPrivate(boolean is_private) {
         this.is_private = is_private;
     }

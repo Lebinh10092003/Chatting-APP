@@ -162,6 +162,6 @@ public class SearchAddMemberFragment extends Fragment {
         userList.clear();
         userList.addAll(users);
         adapter.notifyDataSetChanged();
-    }
+    } 
 
 }

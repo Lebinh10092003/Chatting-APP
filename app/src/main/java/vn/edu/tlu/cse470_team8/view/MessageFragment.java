@@ -35,10 +35,8 @@ public class MessageFragment extends Fragment {
     private SharedPreferences sharedPreferences;
     private String userId;
 
-
     public MessageFragment() {
         // Required empty public constructor
-
     }
 
     @Override
@@ -53,40 +51,44 @@ public class MessageFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.rcv_message);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        getUserGroups(userId);
+
+        // Bắt đầu lắng nghe các thay đổi
+        listenToUserGroups(userId);
 
         return view;
     }
-    private void getUserGroups(String userId) {
+
+    // Lắng nghe các nhóm mà người dùng tham gia
+    private void listenToUserGroups(String userId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         CollectionReference groupMembersRef = db.collection("group_members");
 
-        // Truy vấn tất cả nhóm mà userId tham gia
         groupMembersRef.whereEqualTo("user_id", userId)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
+                .addSnapshotListener((queryDocumentSnapshots, e) -> {
+                    if (e != null) {
+                        Log.e("Firestore", "Error listening to group_members changes", e);
+                        return;
+                    }
+
                     List<String> groupIds = new ArrayList<>();
                     for (DocumentSnapshot document : queryDocumentSnapshots) {
                         groupIds.add(document.getString("group_id"));
                     }
 
-                    // Sau khi có danh sách groupId, lấy từng nhóm riêng lẻ
+                    // Lấy thông tin từng nhóm sau khi có danh sách groupIds
                     if (!groupIds.isEmpty()) {
                         for (String groupId : groupIds) {
                             getPrivateGroup(groupId);
                         }
                     }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("Firestore", "Error getting user groups", e);
                 });
     }
 
+    // Lấy thông tin nhóm riêng tư và lắng nghe tin nhắn
     private void getPrivateGroup(String groupId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         CollectionReference groupsRef = db.collection("groups");
 
-        // Lấy thông tin nhóm theo group_id và kiểm tra nếu là nhóm private
         groupsRef.whereEqualTo("group_id", groupId)
                 .whereEqualTo("is_private", true)
                 .get()
@@ -95,10 +97,12 @@ public class MessageFragment extends Fragment {
                         DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
                         Group group = document.toObject(Group.class);
 
-                        // Tiếp tục lấy tin nhắn cuối cùng và đếm số tin nhắn chưa đọc nếu nhóm tồn tại
+                        // Nếu nhóm là private, bắt đầu lắng nghe tin nhắn và số lượng tin nhắn chưa đọc
                         if (group != null) {
                             getLastMessageForGroup(group);
                             countUnreadMessagesForGroup(group);
+                            listenToMessagesForGroup(group);
+                            listenToUnreadMessagesForGroup(group);
                         }
                     }
                 })
@@ -107,20 +111,23 @@ public class MessageFragment extends Fragment {
                 });
     }
 
-    private void getLastMessageForGroup(Group group) {
+    // Lắng nghe thay đổi tin nhắn trong nhóm và cập nhật tin nhắn cuối
+    private void listenToMessagesForGroup(Group group) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         CollectionReference messagesRef = db.collection("messages");
 
-        // Lấy tin nhắn cuối cùng cho nhóm theo group_id
         messagesRef.whereEqualTo("group_id", group.getGroup_id())
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
+                .addSnapshotListener((queryDocumentSnapshots, e) -> {
+                    if (e != null) {
+                        Log.e("Firestore", "Error listening to messages changes", e);
+                        return;
+                    }
+
                     DocumentSnapshot lastMessageDoc = null;
                     for (DocumentSnapshot document : queryDocumentSnapshots) {
                         if (lastMessageDoc == null ||
                                 document.getTimestamp("timestamp").compareTo(lastMessageDoc.getTimestamp("timestamp")) > 0) {
                             lastMessageDoc = document;
-                            Log.d("Fires tore", "Last message: " + lastMessageDoc.getString("content"));
                         }
                     }
 
@@ -129,8 +136,80 @@ public class MessageFragment extends Fragment {
                         group.setLast_message_time(lastMessageDoc.getTimestamp("timestamp"));
                     }
 
-                    // Thêm nhóm vào danh sách hiển thị
-                    privateGroups.add(group);
+                    // Cập nhật giao diện nếu Fragment đã được thêm vào
+                    if (!isAdded()) return;
+
+                    // Kiểm tra xem nhóm đã có trong danh sách chưa
+                    if (!privateGroups.contains(group)) {
+                        privateGroups.add(group);
+                    }
+
+                    // Cập nhật giao diện
+                    if (groupAdapter == null) {
+                        groupAdapter = new GroupAdapter(requireContext(), privateGroups);
+                        recyclerView.setAdapter(groupAdapter);
+                    } else {
+                        groupAdapter.notifyDataSetChanged();
+                    }
+                });
+    }
+
+    // Lắng nghe số lượng tin nhắn chưa đọc và cập nhật
+    private void listenToUnreadMessagesForGroup(Group group) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        CollectionReference messagesRef = db.collection("messages");
+
+        messagesRef.whereEqualTo("group_id", group.getGroup_id())
+                .whereEqualTo("is_read", false)
+                .addSnapshotListener((queryDocumentSnapshots, e) -> {
+                    if (e != null) {
+                        Log.e("Firestore", "Error listening to unread messages changes", e);
+                        return;
+                    }
+
+                    long unreadMessageCount = queryDocumentSnapshots.size();
+                    Log.d("Firestore", "Unread messages count: " + unreadMessageCount);
+
+                    // Cập nhật số tin nhắn chưa đọc vào đối tượng Group
+                    group.setUnread_messages_count(unreadMessageCount);
+
+                    // Cập nhật giao diện nếu Fragment đã được thêm vào
+                    if (!isAdded()) return;
+
+                    if (groupAdapter != null) {
+                        groupAdapter.notifyDataSetChanged();
+                    }
+                });
+    }
+
+    // Lấy tin nhắn cuối cùng của nhóm
+    private void getLastMessageForGroup(Group group) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        CollectionReference messagesRef = db.collection("messages");
+
+        messagesRef.whereEqualTo("group_id", group.getGroup_id())
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    DocumentSnapshot lastMessageDoc = null;
+                    for (DocumentSnapshot document : queryDocumentSnapshots) {
+                        if (lastMessageDoc == null ||
+                                document.getTimestamp("timestamp").compareTo(lastMessageDoc.getTimestamp("timestamp")) > 0) {
+                            lastMessageDoc = document;
+                        }
+                    }
+
+                    if (lastMessageDoc != null) {
+                        group.setLast_message(lastMessageDoc.getString("content"));
+                        group.setLast_message_time(lastMessageDoc.getTimestamp("timestamp"));
+                    }
+
+                    // Cập nhật giao diện nếu Fragment đã được thêm vào
+                    if (!isAdded()) return;
+
+                    // Kiểm tra xem nhóm đã có trong danh sách chưa
+                    if (!privateGroups.contains(group)) {
+                        privateGroups.add(group);
+                    }
 
                     // Cập nhật giao diện
                     if (groupAdapter == null) {
@@ -144,29 +223,28 @@ public class MessageFragment extends Fragment {
                     Log.e("Firestore", "Error getting last message for group", e);
                 });
     }
+
+    // Đếm số lượng tin nhắn chưa đọc trong nhóm
     private void countUnreadMessagesForGroup(Group group) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         CollectionReference messagesRef = db.collection("messages");
 
-        // Lọc tin nhắn của nhóm với trạng thái is_read = false
         messagesRef.whereEqualTo("group_id", group.getGroup_id())
-                .whereEqualTo("is_read", false) // Trạng thái là false
+                .whereEqualTo("is_read", false)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     long unreadMessageCount = 0;
-
-                    // Đếm số lượng tin nhắn có trạng thái is_read = false
                     if (queryDocumentSnapshots != null) {
                         unreadMessageCount = queryDocumentSnapshots.size();
                     }
-
-                    // Hiển thị kết quả
                     Log.d("Firestore", "Unread messages count: " + unreadMessageCount);
 
-                    // Bạn có thể lưu số lượng tin nhắn chưa đọc vào đối tượng Group nếu cần
+                    // Cập nhật số lượng tin nhắn chưa đọc
                     group.setUnread_messages_count(unreadMessageCount);
 
-                    // Cập nhật giao diện (nếu cần)
+                    // Cập nhật giao diện nếu Fragment đã được thêm vào
+                    if (!isAdded()) return;
+
                     if (groupAdapter != null) {
                         groupAdapter.notifyDataSetChanged();
                     }
@@ -175,6 +253,4 @@ public class MessageFragment extends Fragment {
                     Log.e("Firestore", "Error counting unread messages", e);
                 });
     }
-
-
 }

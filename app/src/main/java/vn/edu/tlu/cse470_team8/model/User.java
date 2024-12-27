@@ -7,6 +7,7 @@ public class User {
     private String username;
     private String phone;
     private String email;
+    private String gender;
     private String password_hash;
     private String avatar_url;
 
@@ -18,11 +19,15 @@ public class User {
 
     public User() {
     }
-    public User(String user_id, String username, String phone, String email, String password_hash, String avatar_url,Timestamp birth_day, String status, Timestamp last_login, Boolean is_verified, Timestamp created_at) {
+
+
+
+    public User(String user_id, String username, String phone, String email, String gender, String password_hash, String avatar_url, Timestamp birth_day, String status, Timestamp last_login, Boolean is_verified, Timestamp created_at) {
         this.user_id = user_id;
         this.username = username;
         this.phone = phone;
         this.email = email;
+        this.gender = gender;
         this.password_hash = password_hash;
         this.avatar_url = avatar_url;
         this.birth_day = birth_day;
@@ -56,6 +61,13 @@ public class User {
     }
     public void setEmail(String email) {
         this.email = email;
+    }
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
     }
     public String getPassword_hash() {
         return password_hash;

@@ -1,6 +1,7 @@
 package vn.edu.tlu.cse470_team8.view;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
 
@@ -27,11 +28,21 @@ public class MainActivity extends AppCompatActivity {
         });
         button = findViewById(R.id.btn_Start_main);
         button.setOnClickListener(v -> {
-            // Chuyen qua home activity
-            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-            startActivity(intent);
-
+            SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+            boolean remember_status = sharedPreferences.getBoolean("remember", false);
+            if (remember_status) {
+                // Nếu đã đăng nhập, gọi hàm
+                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                startActivity(intent);
+                finish();
+            }else{
+                // Nếu chưa đăng nhập, gọi hàm
+                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
         });
+
     }
 
 }

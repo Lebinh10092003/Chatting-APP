@@ -1,11 +1,13 @@
 package vn.edu.tlu.cse470_team8.view;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -13,10 +15,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.storage.FirebaseStorage;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +42,7 @@ public class ChatActivity extends AppCompatActivity {
     private ImageButton bt_back, bt_add_media;
     private Button bt_send_message;
     private EditText edt_content_chat;
+    private ImageView avatar_chat;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +58,8 @@ public class ChatActivity extends AppCompatActivity {
         bt_send_message = findViewById(R.id.bt_send_message);
         edt_content_chat = findViewById(R.id.edt_chat_message);
         txt_suggest_word = findViewById(R.id.txt_suggest_word);
+        avatar_chat = findViewById(R.id.avatar_chat);
+
 
         // Lấy thông tin nhóm từ intent
         String groupId = getIntent().getStringExtra("groupId");
@@ -72,9 +79,8 @@ public class ChatActivity extends AppCompatActivity {
         rcv_suggest.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         rcv_suggest.setAdapter(suggestAdapter);
 
-        // Set tên nhóm
-        txt_group_name.setText(groupName);
-
+        // Tải thông tin nhóm
+        loadGroupInfo(groupId);
         // Tải tin nhắn
         loadMessages(groupId);
 
@@ -91,7 +97,49 @@ public class ChatActivity extends AppCompatActivity {
         // Xử lý khi người dùng nhấp vào nút quay lại
         bt_back.setOnClickListener(v -> finish());
 
+        txt_group_name.setOnClickListener(v -> {
+            //Chuyen den edit group va truyen groupId
+            Intent intent = new Intent(ChatActivity.this, EditGroupActivity.class);
+            intent.putExtra("groupId", groupId);
+            startActivity(intent);
+        });
 
+
+    }
+    // Hàm tải thông tin nhóm (tên nhóm và ảnh nhóm)
+    private void loadGroupInfo(String groupId) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("groups").document(groupId)
+                .addSnapshotListener((documentSnapshot, e) -> {
+                    if (e != null) {
+                        Log.w("Firestore", "Listen failed.", e);
+                        return;
+                    }
+
+                    if (documentSnapshot != null && documentSnapshot.exists()) {
+                        String newGroupName = documentSnapshot.getString("group_name");
+                        String newGroupPhotoUrl = documentSnapshot.getString("avatar_url");
+
+                        // Cập nhật tên nhóm
+                        if (newGroupName != null) {
+                            txt_group_name.setText(newGroupName);
+                        }
+
+                        // Cập nhật ảnh nhóm nếu có URL
+                        if (newGroupPhotoUrl != null && !newGroupPhotoUrl.isEmpty()) {
+                            FirebaseStorage.getInstance().getReferenceFromUrl(newGroupPhotoUrl)
+                                    .getDownloadUrl()
+                                    .addOnSuccessListener(uri -> {
+                                        Glide.with(ChatActivity.this)
+                                                .load(uri) // Lấy URL tải về của ảnh
+                                                .into(avatar_chat); // Cập nhật ảnh nhóm vào ImageView
+                                    })
+                                    .addOnFailureListener(exception -> {
+                                        Log.e("FirebaseStorage", "Error loading image", exception);
+                                    });
+                        }
+                    }
+                });
     }
 
     private void loadMessages(String groupId) {
@@ -99,48 +147,46 @@ public class ChatActivity extends AppCompatActivity {
         CollectionReference messagesRef = db.collection("messages");
 
         messagesRef.whereEqualTo("group_id", groupId)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    messages.clear();
-                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        Message message = document.toObject(Message.class);
-
-                        // Kiểm tra và chuyển đổi timestamp nếu cần
-                        if (document.contains("timestamp") && document.get("timestamp") != null) {
-                            Timestamp timestamp = document.getTimestamp("timestamp");
-                            if (timestamp != null) {
-                                message.setTimestamp(timestamp); // Đảm bảo set đúng kiểu Timestamp
-                            }
-                        }
-
-                        messages.add(message);
+                .addSnapshotListener((queryDocumentSnapshots, error) -> {
+                    if (error != null) {
+                        Log.e("Firestore", "Listen failed.", error);
+                        return;
                     }
 
-                    // Sắp xếp tin nhắn theo timestamp
-                    messages.sort((m1, m2) -> m1.getTimestamp().compareTo(m2.getTimestamp()));
+                    if (queryDocumentSnapshots != null) {
+                        messages.clear();
+                        for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                            Message message = document.toObject(Message.class);
 
-                    // Cập nhật RecyclerView cho tin nhắn
-                    chatAdapter.notifyDataSetChanged();
+                            // Kiểm tra và chuyển đổi timestamp nếu cần
+                            if (document.contains("timestamp") && document.get("timestamp") != null) {
+                                Timestamp timestamp = document.getTimestamp("timestamp");
+                                if (timestamp != null) {
+                                    message.setTimestamp(timestamp); // Đảm bảo set đúng kiểu Timestamp
+                                }
+                            }
+                            messages.add(message);
+                        }
 
-                    // Scroll xuống tin nhắn mới nhất
-                    recyclerView.scrollToPosition(messages.size() - 1);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("Firestore", "Error getting messages", e);
+                        // Sắp xếp tin nhắn theo timestamp
+                        messages.sort((m1, m2) -> m1.getTimestamp().compareTo(m2.getTimestamp()));
+
+                        // Cập nhật RecyclerView cho tin nhắn
+                        chatAdapter.notifyDataSetChanged();
+
+                        // Scroll xuống tin nhắn mới nhất
+                        recyclerView.scrollToPosition(messages.size() - 1);
+                    }
                 });
     }
-
     private void sendMessage(String content) {
-        // Lấy userId và groupId từ SharedPreferences và Intent
         SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
         String userId = sharedPreferences.getString("userId", "");
         String groupId = getIntent().getStringExtra("groupId");
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis() / 1000, 0); // Lấy thời gian hiện tại
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis() / 1000, 0);
 
-        // Tạo ID cho tin nhắn, có thể sử dụng UUID hoặc Firebase-generated ID
         String messageId = FirebaseFirestore.getInstance().collection("messages").document().getId();
 
-        // Tạo đối tượng Message
         Message message = new Message();
         message.setSender_id(userId);
         message.setContent(content);
@@ -150,24 +196,17 @@ public class ChatActivity extends AppCompatActivity {
         message.setMessage_id(messageId);
         message.setMessage_type("text");
         message.setStatus("sent");
-        // Lưu tin nhắn vào Firestore
+
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("messages")
-                .document(messageId)  // Dùng messageId để lưu tin nhắn
+                .document(messageId)
                 .set(message)
                 .addOnSuccessListener(documentReference -> {
-                    // Tin nhắn đã được gửi thành công
-                    edt_content_chat.setText(""); // Xóa nội dung tin nhắn trong EditText
-
-                    // Cập nhật danh sách tin nhắn
-                    messages.add(message);
-                    chatAdapter.notifyItemInserted(messages.size() - 1);
-                    recyclerView.scrollToPosition(messages.size() - 1);
+                    edt_content_chat.setText(""); // Xóa nội dung tin nhắn
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(ChatActivity.this, "Failed to send message", Toast.LENGTH_SHORT).show();
                 });
     }
-
 
 }

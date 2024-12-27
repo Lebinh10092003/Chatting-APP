@@ -11,6 +11,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.google.firebase.Timestamp;
 
 import java.text.SimpleDateFormat;
@@ -44,17 +45,27 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
 
         // Set tên nhóm
         holder.groupName.setText(group.getGroup_name());
-        // Set thời gian gửi tin nhắn cuối cùng bằng cách lấy dữ liệu từ firestore và chuyển đổi
+
+        // Set thời gian gửi tin nhắn cuối cùng bằng cách lấy dữ liệu từ Firestore và chuyển đổi
         Timestamp timestamp = group.getLast_message_time();
         String formattedTime = formatTimestampToTime(timestamp);
         holder.sentTime.setText(formattedTime);
+
         // Set tin nhắn cuối
         holder.lastMessage.setText(group.getLast_message());
+
         // Set số tin nhắn chưa đọc
         holder.unreadMessagesCount.setText(String.valueOf(group.getUnread_messages_count()));
 
         // Set avatar (nếu có URL)
-        holder.avatarImageView.setImageResource(R.drawable.logo_remove);
+        String avatarUrl = group.getAvatar_url(); // Giả sử bạn đã lưu URL ảnh trong `Group`
+        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+            Glide.with(context)
+                    .load(avatarUrl) // Tải ảnh từ URL Firebase Storage
+                    .into(holder.avatarImageView); // Đặt ảnh vào ImageView
+        } else {
+            holder.avatarImageView.setImageResource(R.drawable.logo_remove); // Ảnh mặc định nếu không có URL
+        }
 
         // Thêm sự kiện click
         holder.itemView.setOnClickListener(v -> {

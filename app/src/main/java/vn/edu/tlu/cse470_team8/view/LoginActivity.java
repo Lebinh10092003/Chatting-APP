@@ -43,12 +43,6 @@ public class LoginActivity extends AppCompatActivity {
         sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
         // Khi người dùng đã đăng nhập, chuyển đến
         remember_status = sharedPreferences.getBoolean("remember", false);
-        if (remember_status) {
-            usernameEditText.setText(sharedPreferences.getString("phone", ""));
-            passwordEditText.setText(sharedPreferences.getString("password", ""));
-
-        }
-
         // Lấy các view từ layout
         usernameEditText = findViewById(R.id.edt_phone_login);
         passwordEditText = findViewById(R.id.edt_password_login);
@@ -56,31 +50,19 @@ public class LoginActivity extends AppCompatActivity {
         switchRemember = findViewById(R.id.sw_remember_password);
         txtForgotPassword = findViewById(R.id.txt_forgot_password);
         txtRegister = findViewById(R.id.txt_register);
+        // Nếu đã đăng nhập, chuyển
+        String phone = usernameEditText.getText().toString().trim();
+        String password = passwordEditText.getText().toString().trim();
+        Log.d("LoginActivity", "Remember me: " + switchRemember.isChecked());
+        Log.d("MainActivity", "Remember status: " + remember_status);
 
 
+        loginButton.setOnClickListener(v -> {
+            Log.d("LoginActivity", "Is checked: " + switchRemember.isChecked());
+            attemptLogin();
 
 
-        loginButton.setOnClickListener(
-                v -> {
-                    attemptLogin();
-                    if (switchRemember.isChecked()) {
-                        // Lưu thông tin đăng nhập
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString("phone", usernameEditText.getText().toString());
-                        editor.putString("password", passwordEditText.getText().toString());
-                        editor.putBoolean("remember", true);
-                        editor.apply();
-
-                    } else {
-                        // Xóa thông tin đăng nhập
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.remove("phone");
-                        editor.remove("password");
-                        editor.remove("remember");
-                        editor.apply();
-                    }
-                }
-        );
+        });
 
         txtForgotPassword.setOnClickListener(v -> {
             Toast.makeText(this, "Chức năng quên mật khẩu đang được phát triển", Toast.LENGTH_SHORT).show();
@@ -118,6 +100,16 @@ public class LoginActivity extends AppCompatActivity {
                             // Lưu userId vào SharedPreferences
                             String userId = userDoc.getString("user_id");
                             saveUserId(userId);
+                            if(switchRemember.isChecked()){
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putBoolean("remember", true);
+                                Log.d("LoginActivity", "Is checked: " + switchRemember.isChecked());
+                                editor.apply();
+                            }else{
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putBoolean("remember", false);
+                                editor.apply();
+                            }
 
                             // Chuyển đến màn hình chính
                             Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
