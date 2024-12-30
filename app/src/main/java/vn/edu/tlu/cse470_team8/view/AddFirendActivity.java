@@ -64,6 +64,7 @@ public class AddFirendActivity extends AppCompatActivity {
     }
 
 
+
     private void searchUser(String phone) {
         // Lấy dữ liệu từ Firestore và lưu vào List
         FirebaseFirestore db = FirebaseFirestore.getInstance();

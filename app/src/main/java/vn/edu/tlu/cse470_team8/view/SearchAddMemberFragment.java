@@ -110,7 +110,7 @@ public class SearchAddMemberFragment extends Fragment {
         this.selectedUserIds = updatedUserIds;
     }
 
-    private void searchUser(String phoneNumber) {
+    private void searchUser(String query) {
         progressDialog = new ProgressDialog(getContext());
         progressDialog.setMessage("Đang tìm kiếm...");
         progressDialog.setCancelable(false);
@@ -118,43 +118,63 @@ public class SearchAddMemberFragment extends Fragment {
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        String phonePrefix = phoneNumber;
-        if (phoneNumber.length() >= 5) {
-            phonePrefix = phoneNumber.substring(0, 5); // Lấy 5 ký tự đầu tiên của số điện thoại
-        } else {
-            phonePrefix = phoneNumber.substring(0, phoneNumber.length()); // Lấy toàn bộ số điện thoại nếu chiều dài nhỏ hơn 5
-        }
+        String phonePrefix = query.toLowerCase();
+        String nameQuery = query.toLowerCase();
 
+        // Danh sách kết quả tìm kiếm
+        List<User> searchResults = new ArrayList<>();
 
-        // Tạo một đoạn mã để tìm kiếm từ 5 ký tự đầu tiên của số điện thoại
+        // Truy vấn theo số điện thoại
         db.collection("users")
                 .whereGreaterThanOrEqualTo("phone", phonePrefix)
-                .whereLessThan("phone", phonePrefix + "\uF8FF") // Chúng ta thêm \uF8FF để bao gồm tất cả các số điện thoại bắt đầu bằng phonePrefix
+                .whereLessThan("phone", phonePrefix + "\uF8FF")
                 .get()
-                .addOnCompleteListener(task -> {
-                    progressDialog.dismiss();
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        List<User> searchResults = new ArrayList<>();
-                        for (QueryDocumentSnapshot document : task.getResult()) {
+                .addOnCompleteListener(phoneTask -> {
+                    if (phoneTask.isSuccessful() && phoneTask.getResult() != null) {
+                        for (QueryDocumentSnapshot document : phoneTask.getResult()) {
                             User user = document.toObject(User.class);
                             searchResults.add(user);
-                            Log.d("Firestore", "User found: " + user.getUsername() + " - " + user.getPhone());
                         }
-                        if (!searchResults.isEmpty()) {
-                            updateRecyclerView(searchResults);
-                        } else {
-                            Toast.makeText(getContext(), "Không tìm thấy người dùng nào phù hợp.", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        Toast.makeText(getContext(), "Lỗi khi tìm kiếm. Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
                     }
+
+                    // Truy vấn theo tên người dùng
+                    db.collection("users")
+                            .whereGreaterThanOrEqualTo("username", nameQuery)
+                            .whereLessThan("username", nameQuery + "\uF8FF")
+                            .get()
+                            .addOnCompleteListener(nameTask -> {
+                                progressDialog.dismiss();
+                                if (nameTask.isSuccessful() && nameTask.getResult() != null) {
+                                    for (QueryDocumentSnapshot document : nameTask.getResult()) {
+                                        User user = document.toObject(User.class);
+                                        if (!searchResults.contains(user)) {
+                                            searchResults.add(user); // Tránh trùng lặp
+                                        }
+                                    }
+
+                                    // Cập nhật RecyclerView với kết quả tìm kiếm
+                                    if (!searchResults.isEmpty()) {
+                                        updateRecyclerView(searchResults);
+                                    } else {
+                                        Toast.makeText(getContext(), "Không tìm thấy người dùng nào phù hợp.", Toast.LENGTH_SHORT).show();
+                                    }
+                                } else {
+                                    Toast.makeText(getContext(), "Lỗi khi tìm kiếm theo tên. Vui lòng thử lại.", Toast.LENGTH_SHORT).show();
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                progressDialog.dismiss();
+                                Log.e("Firestore", "Error searching by username: " + e.getMessage());
+                                Toast.makeText(getContext(), "Lỗi khi tìm kiếm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            });
                 })
                 .addOnFailureListener(e -> {
                     progressDialog.dismiss();
-                    Log.e("Firestore", "Error: " + e.getMessage());
-                    Toast.makeText(getContext(), "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e("Firestore", "Error searching by phone: " + e.getMessage());
+                    Toast.makeText(getContext(), "Lỗi khi tìm kiếm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
+
 
 
 

@@ -38,8 +38,8 @@ public class ChatActivity extends AppCompatActivity {
     private SuggestWordAdapter suggestAdapter;
     private List<Message> messages = new ArrayList<>();
     private FirebaseFirestore db;
-    private TextView txt_group_name, txt_status, txt_suggest_word;
-    private ImageButton bt_back, bt_add_media;
+    private TextView txt_group_name,txt_status,txt_suggest_word;
+    private ImageButton bt_back,bt_add_media;
     private Button bt_send_message;
     private EditText edt_content_chat;
     private ImageView avatar_chat;
@@ -63,7 +63,10 @@ public class ChatActivity extends AppCompatActivity {
 
         // Lấy thông tin nhóm từ intent
         String groupId = getIntent().getStringExtra("groupId");
-        String groupName = getIntent().getStringExtra("groupName");
+        //Lay ra avatar tu firebase dua vao groupId
+        loadGroupInfo(groupId);
+        Log.d("ChatActivity", "Group ID: " + groupId);
+
 
         // Cấu hình RecyclerView cho tin nhắn
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -78,9 +81,6 @@ public class ChatActivity extends AppCompatActivity {
         });
         rcv_suggest.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         rcv_suggest.setAdapter(suggestAdapter);
-
-        // Tải thông tin nhóm
-        loadGroupInfo(groupId);
         // Tải tin nhắn
         loadMessages(groupId);
 
@@ -106,41 +106,60 @@ public class ChatActivity extends AppCompatActivity {
 
 
     }
+
+    protected void onResume() {
+        super.onResume();
+        // Reload lại dữ liệu tại đây
+        String groupId = getIntent().getStringExtra("groupId");
+        loadGroupInfo(groupId);
+        loadMessages(groupId);
+
+    }
     // Hàm tải thông tin nhóm (tên nhóm và ảnh nhóm)
     private void loadGroupInfo(String groupId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("groups").document(groupId)
-                .addSnapshotListener((documentSnapshot, e) -> {
-                    if (e != null) {
-                        Log.w("Firestore", "Listen failed.", e);
-                        return;
-                    }
+        db.collection("groups")
+                .document(groupId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String groupName = documentSnapshot.getString("group_name");
+                        String avatarUrl = documentSnapshot.getString("avatar_url");
 
-                    if (documentSnapshot != null && documentSnapshot.exists()) {
-                        String newGroupName = documentSnapshot.getString("group_name");
-                        String newGroupPhotoUrl = documentSnapshot.getString("avatar_url");
+                        // Log thông tin nhóm để kiểm tra
+                        Log.d("ChatActivity", "Group Name: " + groupName);
+                        Log.d("ChatActivity", "Avatar URL: " + avatarUrl);
 
-                        // Cập nhật tên nhóm
-                        if (newGroupName != null) {
-                            txt_group_name.setText(newGroupName);
+                        // Cập nhật giao diện
+                        if (groupName != null) {
+                            txt_group_name.setText(groupName);
+                        } else {
+                            txt_group_name.setText("No Name"); // Tên mặc định nếu không có
                         }
 
-                        // Cập nhật ảnh nhóm nếu có URL
-                        if (newGroupPhotoUrl != null && !newGroupPhotoUrl.isEmpty()) {
-                            FirebaseStorage.getInstance().getReferenceFromUrl(newGroupPhotoUrl)
-                                    .getDownloadUrl()
-                                    .addOnSuccessListener(uri -> {
-                                        Glide.with(ChatActivity.this)
-                                                .load(uri) // Lấy URL tải về của ảnh
-                                                .into(avatar_chat); // Cập nhật ảnh nhóm vào ImageView
-                                    })
-                                    .addOnFailureListener(exception -> {
-                                        Log.e("FirebaseStorage", "Error loading image", exception);
-                                    });
+                        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                            Glide.with(this)
+                                    .load(avatarUrl)
+                                    .placeholder(R.drawable.logo_remove) // Avatar mặc định khi tải
+                                    .error(R.drawable.logo_remove) // Avatar mặc định khi lỗi
+                                    .into(avatar_chat);
+                        } else {
+                            avatar_chat.setImageResource(R.drawable.logo_remove); // Avatar mặc định
                         }
+                    } else {
+                        Log.w("ChatActivity", "Group document does not exist.");
+                        txt_group_name.setText("Unknown Group"); // Tên mặc định nếu nhóm không tồn tại
+                        avatar_chat.setImageResource(R.drawable.logo_remove); // Avatar mặc định
                     }
+                })
+                .addOnFailureListener(e -> {
+                    // Log lỗi nếu có
+                    Log.e("ChatActivity", "Error loading group info", e);
+                    txt_group_name.setText("Error Loading"); // Tên mặc định khi lỗi
+                    avatar_chat.setImageResource(R.drawable.logo_remove); // Avatar mặc định
                 });
     }
+
 
     private void loadMessages(String groupId) {
         db = FirebaseFirestore.getInstance();

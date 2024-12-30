@@ -1,6 +1,7 @@
 package vn.edu.tlu.cse470_team8.view;
 
 import static android.content.Context.MODE_PRIVATE;
+import static android.content.Intent.getIntent;
 
 import android.content.Context;
 import android.content.SharedPreferences;

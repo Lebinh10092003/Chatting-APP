@@ -127,6 +127,13 @@ public class HomeActivity extends AppCompatActivity {
 
 
     }
+    protected void onResume() {
+        super.onResume();
+        // Reload lại dữ liệu tại đây
+        changeSelectedState(selected);
+        checkSelected(selected);
+    }
+
     protected  void StartMessageFragment(){
         // Chuyen qua message Fragment
         MessageFragment messageFragment = new MessageFragment();

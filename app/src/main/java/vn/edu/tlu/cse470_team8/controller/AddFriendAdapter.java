@@ -1,8 +1,10 @@
 package vn.edu.tlu.cse470_team8.controller;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.Timestamp;
@@ -30,10 +33,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import vn.edu.tlu.cse470_team8.R;
 import vn.edu.tlu.cse470_team8.model.Message;
 import vn.edu.tlu.cse470_team8.model.User;
+import vn.edu.tlu.cse470_team8.view.HomeActivity;
 
 public class AddFriendAdapter extends RecyclerView.Adapter<AddFriendAdapter.AddFriendViewHolder> {
     private Context context;
@@ -76,6 +81,14 @@ public class AddFriendAdapter extends RecyclerView.Adapter<AddFriendAdapter.AddF
             String friendId = user.getUser_id();
             Log.d("AddFriendAdapter", "Adding friend: " + friendId);
             checkIfGroupExists(userId, friendId);
+            new Handler().postDelayed(() -> bt_add_friend.setEnabled(true), 5000);
+            // Quay lại HomeActivity sau khi thêm bạn thành công
+            AppCompatActivity activity = (AppCompatActivity) v.getContext();
+            Intent intent = new Intent(activity, HomeActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Xóa tất cả các Activity trên stack
+            activity.startActivity(intent);
+            activity.finish(); // Kết thúc Activity hiện tại
+
         });
 
     }
@@ -150,9 +163,8 @@ public class AddFriendAdapter extends RecyclerView.Adapter<AddFriendAdapter.AddF
         // Tải ảnh lên Storage
         UploadTask uploadTask = avatarRef.putFile(avatarUri);
 
-        // Tao moi Group id
-        String newGroupId = "group_" +userId1 + "_" + userId2;
-
+        // Tạo ID nhóm mới
+        String groupId = UUID.randomUUID().toString();
 
         uploadTask.addOnSuccessListener(taskSnapshot -> {
             // Lấy URL ảnh sau khi tải lên thành công
@@ -164,15 +176,13 @@ public class AddFriendAdapter extends RecyclerView.Adapter<AddFriendAdapter.AddF
                 groupData.put("avatar_url", avatarUrl);
                 groupData.put("created_at", FieldValue.serverTimestamp());
                 groupData.put("created_by", userId1);
-                groupData.put("group_id",newGroupId);
+                groupData.put("group_id", groupId);
                 groupData.put("group_name", "Group of " + userId1 + " & " + userId2);
                 groupData.put("is_private", true);
 
-                // Lưu nhóm vào Firestore
-                groupsRef.add(groupData).addOnCompleteListener(task -> {
+                // Lưu nhóm vào Firestore với ID là newGroupId
+                groupsRef.document(groupId).set(groupData).addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        String groupId = newGroupId;
-
                         // Thêm user1 và user2 vào nhóm
                         addUserToGroupPrivate(groupId, userId1);
                         addUserToGroupPrivate(groupId, userId2);
@@ -189,6 +199,7 @@ public class AddFriendAdapter extends RecyclerView.Adapter<AddFriendAdapter.AddF
             Log.e("CreateGroup", "Error uploading avatar: ", e);
         });
     }
+
 
 
     private void addUserToGroupPrivate(String groupId, String userId) {
