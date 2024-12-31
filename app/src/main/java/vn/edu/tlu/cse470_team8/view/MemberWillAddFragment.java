@@ -115,11 +115,10 @@ public class MemberWillAddFragment extends Fragment {
                     // Cập nhật giao diện hoặc chuyển sang màn hình khác
                     Toast.makeText(getContext(), "Tạo nhóm thành công!", Toast.LENGTH_SHORT).show();
                     // Chuyen den home activity voi fragment group
-                    Intent homeActivity = new Intent(getContext(), HomeActivity.class);
-                    startActivity(homeActivity);
-                    getParentFragmentManager().beginTransaction()
-                            .replace(R.id.frame_create_public_group, new GroupFragment())
-                            .commit();
+                    Intent intent = new Intent(getContext(), HomeActivity.class);
+                    intent.putExtra("fragment", "group");
+                    startActivity(intent);
+
                 })
                 .addOnFailureListener(e -> {
                     Log.w("GroupInfo", "Error creating group", e);

@@ -85,6 +85,7 @@ public class AddFriendAdapter extends RecyclerView.Adapter<AddFriendAdapter.AddF
             // Quay lại HomeActivity sau khi thêm bạn thành công
             AppCompatActivity activity = (AppCompatActivity) v.getContext();
             Intent intent = new Intent(activity, HomeActivity.class);
+            intent.putExtra("fragment", "message");
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Xóa tất cả các Activity trên stack
             activity.startActivity(intent);
             activity.finish(); // Kết thúc Activity hiện tại

@@ -38,8 +38,9 @@ public class HomeActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
+        // Lấy trạng thái  từ SharedPreferences
         SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        selected = sharedPreferences.getString("fragment", "message");
         boolean remember_status = sharedPreferences.getBoolean("remember", false);
         Log.d("MainActivity", "Remember status: " + remember_status);
         // Ánh xạ các phần tử cua bottom bar
