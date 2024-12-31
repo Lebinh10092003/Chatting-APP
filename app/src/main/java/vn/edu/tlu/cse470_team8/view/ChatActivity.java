@@ -1,9 +1,15 @@
 package vn.edu.tlu.cse470_team8.view;
 
+import static android.app.ProgressDialog.show;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -19,6 +25,7 @@ import com.bumptech.glide.Glide;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 
@@ -30,6 +37,7 @@ import vn.edu.tlu.cse470_team8.R;
 import vn.edu.tlu.cse470_team8.controller.ChatAdapter;
 import vn.edu.tlu.cse470_team8.controller.SuggestWordAdapter;
 import vn.edu.tlu.cse470_team8.model.Message;
+import vn.edu.tlu.cse470_team8.service.CallAPI;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -43,6 +51,7 @@ public class ChatActivity extends AppCompatActivity {
     private Button bt_send_message;
     private EditText edt_content_chat;
     private ImageView avatar_chat;
+    private List<String> suggestWords = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,22 +82,36 @@ public class ChatActivity extends AppCompatActivity {
         chatAdapter = new ChatAdapter(this, messages);
         recyclerView.setAdapter(chatAdapter);
 
-        // Cấu hình RecyclerView cho từ gợi ý
-        List<String> suggestWords = Arrays.asList("Hello", "Hi", "Good morning", "Thanks", "Goodbye");
         suggestAdapter = new SuggestWordAdapter(this, suggestWords, word -> {
             // Xử lý khi người dùng nhấp vào một từ gợi ý
-            Toast.makeText(ChatActivity.this, "Clicked: " + word, Toast.LENGTH_SHORT).show();
+            String currentText = edt_content_chat.getText().toString();
+            // Nếu hiện tại có văn bản, thêm dấu cách trước từ mới
+            if (!currentText.isEmpty()) {
+                currentText += " ";
+            }
+            // Nối từ gợi ý vào cuối
+            currentText += word;
+            edt_content_chat.setText(currentText);
+            // Đặt con trỏ vào cuối văn bản (tự động di chuyển đến cuối sau khi thay đổi)
+            edt_content_chat.setSelection(currentText.length());
         });
+
+        // Thiết lập LayoutManager và Adapter cho RecyclerView
         rcv_suggest.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         rcv_suggest.setAdapter(suggestAdapter);
         // Tải tin nhắn
         loadMessages(groupId);
+
 
         // Xử lý khi người dùng nhấp vào nút gửi tin nhắn
         bt_send_message.setOnClickListener(v -> {
             String messageContent = edt_content_chat.getText().toString().trim();
             if (!messageContent.isEmpty()) {
                 sendMessage(messageContent);
+                // Goi API
+                CallAPI.initializeFirestore();
+                CallAPI.callFlaskAPI();
+
             } else {
                 Toast.makeText(ChatActivity.this, "Please enter a message", Toast.LENGTH_SHORT).show();
             }
@@ -104,6 +127,31 @@ public class ChatActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        edt_content_chat.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Không cần xử lý
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Không cần xử lý
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String text = s.toString().trim();
+                if (!text.isEmpty()) {
+                    // Lấy từ cuối cùng trong chuỗi
+                    String[] words = text.split("\\s+"); // Tách từ dựa trên khoảng trắng
+                    String lastWord = words[words.length - 1]; // Lấy từ cuối cùng
+                    // Gọi hàm loadSuggestions với từ cuối cùng
+                    loadSuggestions(lastWord);
+                }
+            }
+        });
+
+
 
     }
 
@@ -115,6 +163,31 @@ public class ChatActivity extends AppCompatActivity {
         loadMessages(groupId);
 
     }
+
+    private void loadSuggestions(String text) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        CollectionReference suggestionsRef = db.collection("q_table_learning");
+
+        suggestionsRef
+                .whereEqualTo("state", text) // Tìm kiếm theo từ khóa
+                .limit(3) // Giới hạn số lượng kết quả trả về
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    suggestWords.clear(); // Xóa danh sách cũ
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        String action = document.getString("action");
+                        if (action != null) {
+                            suggestWords.add(action); // Thêm từ gợi ý vào danh sách
+                        }
+                    }
+                    suggestAdapter.notifyDataSetChanged(); // Cập nhật giao diện
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Firestore", "Error loading suggestions: ", e);
+                });
+    }
+
+
     // Hàm tải thông tin nhóm (tên nhóm và ảnh nhóm)
     private void loadGroupInfo(String groupId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();

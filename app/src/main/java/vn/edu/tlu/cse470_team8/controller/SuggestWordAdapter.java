@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import vn.edu.tlu.cse470_team8.R;
@@ -19,13 +20,15 @@ public class SuggestWordAdapter extends RecyclerView.Adapter<SuggestWordAdapter.
     private Context context;
     private OnWordClickListener onWordClickListener;
 
+    // Giao diện cho sự kiện click vào từ gợi ý
     public interface OnWordClickListener {
         void onWordClick(String word);
     }
 
+    // Constructor
     public SuggestWordAdapter(Context context, List<String> suggestWords, OnWordClickListener onWordClickListener) {
         this.context = context;
-        this.suggestWords = suggestWords;
+        this.suggestWords = suggestWords != null ? suggestWords : new ArrayList<>();
         this.onWordClickListener = onWordClickListener;
     }
 
@@ -41,6 +44,7 @@ public class SuggestWordAdapter extends RecyclerView.Adapter<SuggestWordAdapter.
         String word = suggestWords.get(position);
         holder.wordTextView.setText(word);
 
+        // Gắn sự kiện click vào item
         holder.itemView.setOnClickListener(v -> {
             if (onWordClickListener != null) {
                 onWordClickListener.onWordClick(word);
@@ -53,6 +57,7 @@ public class SuggestWordAdapter extends RecyclerView.Adapter<SuggestWordAdapter.
         return suggestWords.size();
     }
 
+    // ViewHolder nội bộ
     public static class SuggestWordViewHolder extends RecyclerView.ViewHolder {
         TextView wordTextView;
 
@@ -61,4 +66,12 @@ public class SuggestWordAdapter extends RecyclerView.Adapter<SuggestWordAdapter.
             wordTextView = itemView.findViewById(R.id.txt_suggest_word);
         }
     }
+
+    // Phương thức cập nhật danh sách từ gợi ý
+    public void updateSuggestions(List<String> newSuggestions) {
+        suggestWords.clear(); // Xóa danh sách cũ
+        suggestWords.addAll(newSuggestions); // Thêm danh sách mới
+        notifyDataSetChanged(); // Làm mới giao diện
+    }
+
 }
